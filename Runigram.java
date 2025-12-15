@@ -13,10 +13,15 @@ public class Runigram {
         image = flippedHorizontally(tinypic);
         System.out.println();
         print(image);
-        
-        image = flippedVertically(tinypic);
+
+        image = flippedHorizontally(image); 
         System.out.println();
         print(image);
+
+        Color[][] grayImage = grayScaled(tinypic);
+        System.out.println();
+        System.out.println("--- Grayscale Image (tinypic) ---");
+        print(grayImage);
     }
 
     /** Returns a 2D array of Color values, representing the image data
@@ -33,7 +38,7 @@ public class Runigram {
                 int r= in.readInt();
                 int g= in.readInt();
                 int b= in.readInt();
-                image[i][j] = new Color(r, g, b);           
+                image[i][j] = new Color(r, g, b);   
             }
         }
         return image;
@@ -50,9 +55,12 @@ public class Runigram {
 
     // Prints the pixels of the given image.
     // Each pixel is printed as a triplet of (r,g,b) values.
+    // This function is used for debugging purposes.
+    // For example, to check that some image processing function works correctly,
+    // we can apply the function and then use this function to print the resulting image.
     private static void print(Color[][] image) {
-        int numRows = image.length;
-        int numCols = image[0].length;
+        int numRows=image.length;
+        int numCols=image[0].length;
         for (int i = 0; i < numRows; i++) {
             for (int j = 0; j < numCols; j++) {
                 print(image[i][j]);
@@ -81,31 +89,33 @@ public class Runigram {
      * Returns an image which is the vertically flipped version of the given image. 
      */
     public static Color[][] flippedVertically(Color[][] image){
-        int height = image.length;
+       int height = image.length;
         int width = image[0].length;
         Color[][] flippedImage = new Color[height][width];
-
+        
         for (int i = 0; i < height; i++) {
             for (int j = 0; j < width; j++) {
-                flippedImage[i][j] = image[height - 1 - i][j]; 
+                flippedImage[i][j] = image[height-1-i][j]; 
             }
         }
         return flippedImage;
     }
     
+    
     // Computes the luminance of the RGB values of the given pixel, using the formula 
     // lum = 0.299 * r + 0.587 * g + 0.114 * b, and returns a Color object consisting
     // the three values r = lum, g = lum, b = lum.
-   private static Color luminance(Color pixel) {
+    private static Color luminance(Color pixel) {
         int r = pixel.getRed();
-        int g = pixel.getGreen();
+        int g = pixel.getGreen(); // **תיקון: שימוש ב-getGreen**
         int b = pixel.getBlue();
         
-        double lumDouble = 0.299 * r + 0.587 * g + 0.114 * b;
+        double lumDouble= 0.299 * r + 0.587 * g + 0.114 * b;
         int lum = (int) Math.round(lumDouble);
         
         return new Color(lum, lum, lum);
     }
+    
     /**
      * Returns an image which is the grayscaled version of the given image.
      */
@@ -114,8 +124,7 @@ public class Runigram {
         int width = image[0].length;
         
         Color[][] grayImage = new Color[height][width];
-        
-        for (int i = 0; i < height; i++) {
+            for (int i = 0; i < height; i++) {
             for (int j = 0; j < width; j++) {
                 Color originalPixel = image[i][j];
                 Color grayPixel = luminance(originalPixel);
@@ -123,13 +132,14 @@ public class Runigram {
             }
         }
         return grayImage;
-    }   
+    }
     
     /**
      * Returns an image which is the scaled version of the given image. 
      * The image is scaled (resized) to have the given width and height.
      */
     public static Color[][] scaled(Color[][] image, int width, int height) {
+        
         int originalHeight = image.length;
         int originalWidth = image[0].length;
         
@@ -137,7 +147,7 @@ public class Runigram {
         
         double heightRatio = (double) originalHeight / height;
         double widthRatio = (double) originalWidth / width;
-        
+
         for (int iPrime = 0; iPrime < height; iPrime++) {
             for (int jPrime = 0; jPrime < width; jPrime++) {
                 
@@ -157,7 +167,8 @@ public class Runigram {
      * v = alpha * v1 + (1 - alpha) * v2, where v1 and v2 are the corresponding r, g, b
      * values in the two input color.
      */
-   public static Color blend(Color c1, Color c2, double alpha) {
+    public static Color blend(Color c1, Color c2, double alpha) {
+        
         double oneMinusAlpha = 1.0 - alpha;
         
         double rBlendDouble = alpha * c1.getRed() + oneMinusAlpha * c2.getRed();
@@ -173,12 +184,13 @@ public class Runigram {
     }
     
     /**
-     * Cosntructs and returns an image which is the blending of the two given images.
+     * Constructs and returns an image which is the blending of the two given images.
      * The blended image is the linear combination of (alpha) part of the first image
      * and (1 - alpha) part the second image.
      * The two images must have the same dimensions.
      */
     public static Color[][] blend(Color[][] image1, Color[][] image2, double alpha) {
+        
         int height = image1.length;
         int width = image1[0].length;
         
@@ -186,6 +198,7 @@ public class Runigram {
         
         for (int i = 0; i < height; i++) {
             for (int j = 0; j < width; j++) {
+                
                 Color c1 = image1[i][j];
                 Color c2 = image2[i][j];
                 
@@ -194,27 +207,30 @@ public class Runigram {
                 blendedImage[i][j] = blendedPixel;
             }
         }
+        
         return blendedImage;
     }
 
     /**
-     * Morphs the source image into the target image, gradually, in n steps.
-     * Animates the morphing process by displaying the morphed image in each step.
-     * Before starting the process, scales the target image to the dimensions
-     * of the source image.
+     * Creates a an animated transition from the source image to the target image, 
+     * by blending the two images in n steps.
+     * The target image is first scaled to the dimensions of the source image.
      */
     public static void morph(Color[][] source, Color[][] target, int n) {
+        
         int height = source.length;
         int width = source[0].length;
         
         Color[][] scaledTarget = scaled(target, width, height);
         
         for (int i = 0; i <= n; i++) {
+
             double alpha = (double) (n - i) / n;
-            
+ 
             Color[][] blendedImage = blend(source, scaledTarget, alpha);
-            
+
             Runigram.display(blendedImage);
+
         }
     }
     
@@ -223,7 +239,8 @@ public class Runigram {
         StdDraw.setTitle("Runigram 2023");
         int height = image.length;
         int width = image[0].length;
-        StdDraw.setCanvasSize(width, height);
+        // **תיקון: הגדרת בד ציור ברוחב ואז גובה**
+        StdDraw.setCanvasSize(width, height); 
         StdDraw.setXscale(0, width);
         StdDraw.setYscale(0, height);
         // Enables drawing graphics in memory and showing it on the screen only when
